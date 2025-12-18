@@ -37,3 +37,9 @@ app:
   
   storage:
     root-path: "./sentinel-storage" # Where encrypted videos are saved
+
+  ai:
+    providers:
+      anthropic:
+        enabled-for-all-clients: true
+        model: "claude-haiku-4.5"
