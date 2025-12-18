@@ -1,0 +1,78 @@
+# Compiled class files
+*.class
+target/
+
+# Log files
+*.log
+logs/
+
+# Package files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+.mvn/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE - Eclipse
+.classpath
+.factorypath
+.project
+.settings/
+*.launch
+.metadata/
+
+# IDE - IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# IDE - NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# IDE - VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application
+sentinel-storage/
+*.onnx.tmp
+# Note: models/yolov8n.onnx is tracked because it's essential for the demo
+# The application can auto-download it, but including it ensures out-of-box functionality
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# Environment
+.env
+.env.local
+*.env
+
+# Test reports (keep templates, ignore generated)
+target/surefire-reports/
+target/site/
