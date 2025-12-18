@@ -16,13 +16,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class VideoProcessor {
 
     private final ObjectDetectionService detectionService;
+    private final FrameRateLimiter frameRateLimiter;
     private SentinelVideoView videoView;
     
     // Prevent backlog: if busy processing frame 1, drop frame 2
     private final AtomicBoolean isProcessing = new AtomicBoolean(false);
 
-    public VideoProcessor(ObjectDetectionService detectionService) {
+    public VideoProcessor(ObjectDetectionService detectionService, FrameRateLimiter frameRateLimiter) {
         this.detectionService = detectionService;
+        this.frameRateLimiter = frameRateLimiter;
     }
 
     public void setVideoView(SentinelVideoView view) {
@@ -35,8 +37,14 @@ public class VideoProcessor {
      */
     @Async
     public void processFrame(WritableImage fxImage) {
-        // Flow Control: Drop frames if AI is busy
+        // Flow Control 1: Drop frames if AI is busy
         if (videoView == null || isProcessing.getAndSet(true)) {
+            return;
+        }
+
+        // Flow Control 2: Drop frames exceeding target rate (PERF-01: 2 FPS cap)
+        if (!frameRateLimiter.shouldProcessFrame()) {
+            isProcessing.set(false);
             return;
         }
 
