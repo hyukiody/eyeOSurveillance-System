@@ -42,7 +42,7 @@ Before contributing, ensure you have:
    ```
 3. Add upstream remote:
    ```bash
-   git remote add upstream https://github.com/hyukiody/Sentinel-AI-Surveillance-System.git
+   git remote add upstream https://github.com/ORIGINAL_OWNER/Sentinel-AI-Surveillance-System.git
    ```
 
 ---

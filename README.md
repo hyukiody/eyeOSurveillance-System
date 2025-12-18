@@ -21,7 +21,7 @@
 
 | Metric | Achievement |
 |--------|-------------|
-| **Video Rendering** | 60 FPS (zero-latency) |
+| **Video Rendering** | 60 FPS (sub-frame latency) |
 | **AI Inference** | 2 FPS (throttled for efficiency) |
 | **Audit Latency** | <10ms per event |
 | **Test Coverage** | 42+ automated tests |
@@ -133,7 +133,7 @@ mvn spring-boot:run
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/v1/alerts/unacknowledged` | GET | Retrieve unacknowledged alerts (paginated) |
+| `/api/v1/alerts/unacknowledged` | GET | Retrieve unacknowledged alerts (paginated: `?page=0&size=20`) |
 | `/api/v1/alerts/zone/{zoneId}` | GET | Alerts filtered by geofence zone |
 | `/api/v1/alerts/severity/{level}` | GET | Alerts by severity (CRITICAL, HIGH, MEDIUM, LOW) |
 | `/api/v1/alerts/{alertId}/acknowledge` | POST | Acknowledge alert with operator username |

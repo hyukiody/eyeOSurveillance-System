@@ -400,7 +400,7 @@ class SecurityAlertRepositoryIntegrationTest {
 ### Production Artifact
 
 ```
-sentinel-surveillance-1.0.0-SNAPSHOT.jar (836 MB)
+sentinel-surveillance-1.0.0-SNAPSHOT.jar (~800MB+)
 ├── Spring Boot embedded Tomcat
 ├── JavaFX runtime
 ├── DJL + ONNX Runtime
