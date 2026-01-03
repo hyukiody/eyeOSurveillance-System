@@ -1,0 +1,86 @@
+# ========================================
+# Private Development Environment
+# ========================================
+
+# Staging area (local development only)
+.staging/
+
+# Environment files (NEVER commit credentials)
+.env
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Build artifacts
+**/target/
+**/build/
+**/dist/
+**/node_modules/
+
+# IDE settings
+**/.idea/
+**/.vscode/settings.json
+**/.classpath
+**/.project
+**/.settings/
+**/.factorypath
+
+# Test reports and logs
+deployment-test-report.json
+**/*.log
+**/*.dumpstream
+**/test-results/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Compiled files
+**/*.class
+
+# Package files
+**/*.jar
+**/*.war
+
+# ========================================
+# PERSONAL & PRIVATE FILES (NEVER COMMIT)
+# ========================================
+
+# Private development directory
+.private/
+**/.private/
+PRIVATE_*.md
+**/PRIVATE_*.md
+
+# Personal learning paths and career notes
+**/CAREER_LEARNING*.md
+**/LEARNING_PATH*.md
+**/PORTFOLIO_*.md
+
+# Obsidian workspace files
+.obsidian/
+**/.obsidian/
+*.obsidian
+
+# Personal notes and documentation
+**/NOTES_*.md
+**/TODO_PRIVATE.md
+**/notes/
+**/personal/
+
+# Security audit scripts (contain findings)
+**/security-audit.ps1
+**/security-audit.log
+
+# Development session logs
+**/DEV_SESSION_*.md
+**/SESSION_NOTES_*.md
+
+# Certification keys and credentials
+*.key
+*.pem
+*.p12
+*.pfx
+credentials/
+secrets/
+keys/

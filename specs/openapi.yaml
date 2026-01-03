@@ -1,0 +1,544 @@
+openapi: 3.0.3
+info:
+  title: eyeO Platform API
+  description: |
+    Privacy-preserving video surveillance platform with Zero-Trust architecture.
+    
+    ## Architecture Overview
+    The eyeO platform implements a Shared-Nothing Architecture (SNA) with split-brain data flows:
+    - **Red Flow**: Protected video data (client-side processing only)
+    - **Blue Flow**: Detection events and metadata (server-side analytics)
+    
+    ## Security Model
+    - JWT-based authentication (HS512)
+    - Client-side data transformation
+    - Role-based access control (FREE/PRO/ENTERPRISE)
+    - Rate limiting: 10 req/sec per user
+    
+    ## Base URL
+    Production: `https://api.eyeo-platform.com`
+    Development: `https://localhost`
+    
+  version: 1.0.0
+  contact:
+    name: eyeO Platform Security Team
+    email: security@eyeo-platform.com
+  license:
+    name: Proprietary
+    url: https://eyeo-platform.com/license
+
+servers:
+  - url: https://api.eyeo-platform.com/v1
+    description: Production API
+  - url: https://staging-api.eyeo-platform.com/v1
+    description: Staging API
+  - url: https://localhost/v1
+    description: Local Development
+
+tags:
+  - name: Authentication
+    description: User authentication and token management
+  - name: Data Protection
+    description: Protected stream processing endpoints
+  - name: Events
+    description: Detection event ingestion (Blue Flow)
+  - name: Storage
+    description: Protected blob storage and retrieval
+  - name: Health
+    description: Service health checks
+
+# ==================== Security Schemes ====================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from `/api/auth/login` endpoint.
+        Include in Authorization header: `Bearer <token>`
+    
+  # ==================== Reusable Schemas ====================
+  schemas:
+    # Authentication Schemas
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: demo@eyeo-platform.com
+          minLength: 3
+          maxLength: 50
+        password:
+          type: string
+          format: password
+          example: SecurePassword123!
+          minLength: 8
+      
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT access token
+          example: eyJhbGciOiJIUzUxMiJ9...
+        refreshToken:
+          type: string
+          description: Refresh token for obtaining new access tokens
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+          example: 86400
+        user:
+          $ref: '#/components/schemas/UserInfo'
+    
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: demo@eyeo-platform.com
+        role:
+          type: string
+          enum: [FREE, PRO, ENTERPRISE]
+          example: PRO
+        licenseStatus:
+          type: string
+          enum: [ACTIVE, TRIAL, EXPIRED, SUSPENDED]
+          example: ACTIVE
+    
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          example: newuser
+        email:
+          type: string
+          format: email
+          example: newuser@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+        tier:
+          type: string
+          enum: [FREE, PRO, ENTERPRISE]
+          default: FREE
+    
+    # Data Protection Schemas
+    StreamMetadata:
+      type: object
+      properties:
+        streamId:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        sessionId:
+          type: string
+          example: session-2024-001
+        cameraId:
+          type: string
+          example: edge-node-001
+        timestamp:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds
+          example: 1704235200000
+        chunkCount:
+          type: integer
+          example: 42
+        totalSize:
+          type: integer
+          format: int64
+          description: Total size in bytes
+          example: 2684354
+    
+    # Event Schemas (Blue Flow)
+    DetectionEvent:
+      type: object
+      required:
+        - eventType
+        - cameraId
+        - timestamp
+      properties:
+        eventType:
+          type: string
+          enum: [PERSON_DETECTED, VEHICLE_DETECTED, MOTION_DETECTED, ALERT]
+          example: PERSON_DETECTED
+        cameraId:
+          type: string
+          example: edge-node-001
+        timestamp:
+          type: integer
+          format: int64
+          example: 1704235200000
+        confidence:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.87
+        boundingBox:
+          $ref: '#/components/schemas/BoundingBox'
+        metadata:
+          type: object
+          additionalProperties: true
+    
+    BoundingBox:
+      type: object
+      properties:
+        x:
+          type: integer
+          example: 120
+        y:
+          type: integer
+          example: 45
+        width:
+          type: integer
+          example: 200
+        height:
+          type: integer
+          example: 350
+    
+    EventBatch:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/DetectionEvent'
+          maxItems: 100
+    
+    # Error Schemas
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Unauthorized
+        message:
+          type: string
+          example: Invalid credentials
+        timestamp:
+          type: integer
+          format: int64
+          example: 1704235200000
+        path:
+          type: string
+          example: /api/auth/login
+    
+    # Health Schema
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN, DEGRADED]
+          example: UP
+        services:
+          type: object
+          properties:
+            database:
+              type: string
+              example: UP
+            storage:
+              type: string
+              example: UP
+            processing:
+              type: string
+              example: UP
+        timestamp:
+          type: integer
+          format: int64
+
+# ==================== API Paths ====================
+paths:
+  # ==================== Authentication Endpoints ====================
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user
+      description: Validates credentials and returns JWT access token
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Creates new user account with FREE tier by default
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid input or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /api/auth/introspect:
+    post:
+      tags:
+        - Authentication
+      summary: Validate JWT token
+      description: Used by downstream services to verify token validity
+      operationId: introspectToken
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/UserInfo'
+        '401':
+          description: Invalid or expired token
+  
+  # ==================== Data Protection Endpoints ====================
+  /stream/process:
+    post:
+      tags:
+        - Data Protection
+      summary: Process incoming video stream
+      description: |
+        Receives and transforms video stream chunks. Returns metadata for tracking.
+        Video data is never stored in plaintext on server.
+      operationId: processStream
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Session-ID
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Unique session identifier
+        - name: X-Camera-ID
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Source camera identifier
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Stream processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamMetadata'
+        '401':
+          description: Unauthorized
+        '413':
+          description: Payload too large (max 500MB)
+        '429':
+          description: Rate limit exceeded
+  
+  /storage/{storageKey}:
+    get:
+      tags:
+        - Storage
+      summary: Retrieve protected blob
+      description: Returns protected blob by storage key. Client must process data locally.
+      operationId: getProtectedBlob
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: storageKey
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the protected blob
+      responses:
+        '200':
+          description: Protected blob retrieved
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Blob not found
+        '403':
+          description: Access denied (not owner or delegate)
+  
+  # ==================== Event Endpoints (Blue Flow) ====================
+  /api/v1/events:
+    post:
+      tags:
+        - Events
+      summary: Ingest detection events
+      description: Receives AI detection events for server-side analytics (Blue Flow)
+      operationId: ingestEvents
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventBatch'
+      responses:
+        '202':
+          description: Events accepted for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accepted:
+                    type: integer
+                    example: 42
+                  batchId:
+                    type: string
+                    example: batch-2024-001
+        '400':
+          description: Invalid event format
+    
+    get:
+      tags:
+        - Events
+      summary: Query detection events
+      description: Retrieve historical events with filtering
+      operationId: queryEvents
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: cameraId
+          in: query
+          schema:
+            type: string
+        - name: eventType
+          in: query
+          schema:
+            type: string
+        - name: startTime
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: endTime
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+      responses:
+        '200':
+          description: Events retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DetectionEvent'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+  
+  # ==================== Health Endpoints ====================
+  /api/auth/health:
+    get:
+      tags:
+        - Health
+      summary: Identity service health
+      description: Returns health status of identity service
+      operationId: identityHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+  
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Data protection service health
+      description: Returns health status of data protection service
+      operationId: dataProtectionHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+# ==================== Global Security ====================
+security:
+  - bearerAuth: []

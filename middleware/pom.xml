@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.teraapi</groupId>
+    <artifactId>teraapi-parent</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <name>TeraAPI Parent</name>
+    <description>Parent POM for TeraAPI Microservices Architecture</description>
+    <url>https://github.com/yistudio/teraapi</url>
+
+    <organization>
+        <name>YiStudIo Software Inc.</name>
+        <url>https://yistudio.com</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>Proprietary License</name>
+            <url>https://yistudio.com/license</url>
+            <distribution>manual</distribution>
+        </license>
+    </licenses>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+    <modules>
+        <module>src/identity-service</module>
+        <module>src/stream-processing-service</module>
+    </modules>
+
+    <scm>
+        <url>https://github.com/yistudio/teraapi</url>
+        <connection>scm:git:https://github.com/yistudio/teraapi.git</connection>
+        <developerConnection>scm:git:https://github.com/yistudio/teraapi.git</developerConnection>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/yistudio/teraapi/issues</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>GitHub Actions</system>
+        <url>https://github.com/yistudio/teraapi/actions</url>
+    </ciManagement>
+
+    <distributionManagement>
+        <repository>
+            <id>teraapi-releases</id>
+            <name>TeraAPI Releases Repository</name>
+            <url>https://repository.yistudio.com/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>teraapi-snapshots</id>
+            <name>TeraAPI Snapshots Repository</name>
+            <url>https://repository.yistudio.com/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.11.0</version>
+                    <configuration>
+                        <source>17</source>
+                        <target>17</target>
+                        <encoding>UTF-8</encoding>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.0.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.3.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.3.0</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+</project>

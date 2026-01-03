@@ -1,0 +1,146 @@
+Hierarchy Tree Class Design
+
+#### ## Overview
+A **Hierarchy Tree Class** represents a structured tree of nodes for organizing and managing inverted images in
+the iBrowserImage Inverter project. This is particularly relevant for Java backend data modeling and React
+frontend UI representation.
+
+- The core class should be `Tree` (managing root node, children, etc.), with child classes like `Node` handling
+individual image/inversion data.
+- Relationships are imposed via UML constructs: e.g., parent-child associations using composition or containment
+to ensure logical integrity in both backend and frontend implementations.
+
+#### ## Core Classes
+Here's a minimal Java class definition for the hierarchy tree. Assume nodes store basic image metadata; more
+details (e.g., inversion parameters) can be added if specified:
+
+```java
+// Node.java - Represents individual items (e.g., images or inverted results)
+public class ImageNode {
+    private String id;
+    private String originalImagePath;
+    private String invertedImagePath;
+    // Optional: Add child nodes for hierarchical relationships.
+    private List<ImageNode> children = new ArrayList<>();
+}
+```
+
+| Java API Class | Attributes | Methods |
+|-----------------|------------|---------|
+| `ImageNode`     | 
+	- `id`: Unique identifier. <br>- 
+	`originalImagePath`: Path to original image. <br>-
+	`invertedImagePath`: Path to inverted image. | 
+		- Constructor: Sets id and paths. <br>- 
+			addChild(): Adds a child
+		node. <br>- 
+			removeChild(): Removes a child node. |
+			| `Tree`          |
+			 - Root node reference (e.g., ImageNode root). | 
+				- traverse(): Iterates through nodes, e.g.,
+		for inversion operations. |
+
+#### ## Class Relationships
+To impose class relations, use UML patterns such as composition or inheritance. Below is a table showing potential
+relationships:
+[DOCUMENTATION]
+
+Relationship Type | Involved Classes            | Example Scenario |
+|---------------------|----------------------------|-------------------|
+- **Composition**: `Tree` contains `ImageNode`, ensuring nodes are owned by the tree.- E.g., In Java, one `Tree` object has multiple `ImageNode` instances as children. Use `List<ImageNode>` for containment. - **Inheritance**: If there are different node types (e.g., inverted vs. original), create subclasses like
+`InvertedNode extends ImageNode`. - Example: Add inversion-specific fields if needed without cluttering the base class. #### ## Implementation Notes
+		- For React frontend, map this Java tree structure to state using a 		similar hierarchy with components for nodes and trees.
+		- Ensure thread safety in Java backend (e.g., use synchronized 			methods or immutable patterns).
+		- Frontend dependency: Use JSON serialization from Java API to pass 		data to React. E.g., Convert `ImageNode` to JSON objects.
+
+#### ## Next Step
+To refine this design, please specify the inversion process details and how nodes are traversed/updated in the UI
+
+
+    throws Exception(
+            DefaultImageNode dis(
+        BufferedImage , <any> , 	
+	File , <any> , 
+	IOException , <any> , 
+	ImageIO , <any> , 
+	ArrayList ,<any> , 
+	List , <any> , 
+	BufferedImage , <any> , 
+	LocalDateTime , <any> , 
+        HashMap , <any> , 
+	Map , <any> , 
+	List , <any>) 
+                
+	for (Exception.typeOf(T).URLStreamHandlerException 
+  	          in DefaultImageNode.event()){
+			return await this.alert(dis.instanceOf().stack());
+	); 
+
+	);	
+};
+
+public NodeType imageNode() 
+        = new NodeType(){
+            private final String nodeId;
+            private ImageData data;
+            private ImageNode parent;
+            private ListDataListener<ImageNode> children;
+
+            public DefaultImageNode(String nodeId, ImageData data) {
+                this.nodeId = nodeId;
+                this.data = data;
+                this.children = new ArrayList<>();
+            }
+
+            
+            public String getNodeId() {
+                return nodeId;
+            }
+
+            
+            public ImageData getData() {
+                return data;
+            }
+
+            
+            public void setData(ImageData data) {
+                this.data = data;
+            }
+
+            
+            public void addChild(ImageNode node) {
+                node.setParent(this);
+                this.children.add(node);
+            }
+
+            
+            public void removeChild(ImageNode node) {
+                this.children.remove(node);
+            }
+
+            
+            public ListDataListener<ImageNode> getChildren() {
+                return new ArrayList<>(children);
+            }
+
+            public ImageNode getParent() {
+                return parent;
+            }
+
+            
+            public void setParent(ImageNode parent) {
+                this.parent = parent;
+            }
+
+            
+            public void process(ImageProcessor processor) {
+                // Here we could implement a visitor pattern to traverse children
+                // For this scope, we process the current node
+                try {
+                    processor.loadImage(data);
+                    processor.invertColors(data);
+                    // Auto-save logic could go here or be invoked manually
+                } catch (Exception e) {
+                    System.err.println("Error processing node " + nodeId + ": " + e.getMessage());
+                }
+            }

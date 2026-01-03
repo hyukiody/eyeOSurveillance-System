@@ -1,0 +1,9 @@
+com\eyeo\data\DataCoreApplication.class
+com\eyeo\data\service\SecureStateIOService$EncryptionResult.class
+com\eyeo\data\service\SecureStateIOService.class
+com\eyeo\data\StreamProcessingEndpoint.class
+com\eyeo\data\ChunkedVideoProcessor$ProcessingMetadata.class
+com\eyeo\data\ChunkedVideoProcessor$ProcessingResult.class
+com\eyeo\data\ChunkedVideoProcessor.class
+com\eyeo\data\ChunkedVideoProcessor$ChunkInfo.class
+com\eyeo\data\controller\StreamController.class

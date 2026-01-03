@@ -1,0 +1,225 @@
+version: '3.8'
+
+# ========================================
+# eyeO Platform - Master Deployment
+# ========================================
+# Professional showcase configuration
+# All services orchestrated for demonstration
+
+networks:
+  secure_mesh_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  identity-db-data:
+  stream-db-data:
+  sentinel-db-data:
+  protected-storage:
+
+services:
+  # ==================== Databases ====================
+  
+  identity-db:
+    image: mysql:8.0
+    container_name: eyeo-identity-db
+    networks:
+      - secure_mesh_net
+    environment:
+      MYSQL_ROOT_PASSWORD: ${IDENTITY_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: identity
+      MYSQL_USER: identity_user
+      MYSQL_PASSWORD: ${IDENTITY_DB_PASSWORD}
+    volumes:
+      - identity-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  stream-db:
+    image: mysql:8.0
+    container_name: eyeo-stream-db
+    networks:
+      - secure_mesh_net
+    environment:
+      MYSQL_ROOT_PASSWORD: ${STREAM_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: stream
+      MYSQL_USER: stream_user
+      MYSQL_PASSWORD: ${STREAM_DB_PASSWORD}
+    volumes:
+      - stream-db-data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  sentinel-db:
+    image: postgres:16-alpine
+    container_name: eyeo-sentinel-db
+    networks:
+      - secure_mesh_net
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sentinel}
+      POSTGRES_USER: ${POSTGRES_USER:-sentinel_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - sentinel-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ==================== Backend Services ====================
+
+  identity-service:
+    build:
+      context: .
+      dockerfile: identity-service/Dockerfile
+    image: eyeo/identity-service:latest
+    container_name: eyeo-identity-service
+    networks:
+      - secure_mesh_net
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      SPRING_DATASOURCE_URL: jdbc:mysql://identity-db:3306/identity
+      SPRING_DATASOURCE_USERNAME: identity_user
+      SPRING_DATASOURCE_PASSWORD: ${IDENTITY_DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET_KEY}
+      SERVER_PORT: 8081
+      EYEO_ENV: ${EYEO_ENV:-production}
+    depends_on:
+      identity-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/auth/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  stream-processing:
+    build:
+      context: .
+      dockerfile: stream-processing/Dockerfile
+    image: eyeo/stream-processing:latest
+    container_name: eyeo-stream-processing
+    networks:
+      - secure_mesh_net
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      SPRING_DATASOURCE_URL: jdbc:mysql://stream-db:3306/stream
+      SPRING_DATASOURCE_USERNAME: stream_user
+      SPRING_DATASOURCE_PASSWORD: ${STREAM_DB_PASSWORD}
+      SERVER_PORT: 8082
+      IDENTITY_SERVICE_URL: http://identity-service:8081
+    depends_on:
+      stream-db:
+        condition: service_healthy
+      identity-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  data-core:
+    build:
+      context: .
+      dockerfile: data-core/Dockerfile
+    image: eyeo/data-core:latest
+    container_name: eyeo-data-core
+    networks:
+      - secure_mesh_net
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      SERVER_PORT: 9090
+      EYEO_MASTER_KEY: ${EYEO_MASTER_KEY}
+      STORAGE_PATH: /protected-storage
+      STORAGE_TYPE: ${STORAGE_TYPE:-LOCAL}
+      IDENTITY_SERVICE_URL: http://identity-service:8081
+      EYEO_ENV: ${EYEO_ENV:-production}
+    volumes:
+      - protected-storage:/protected-storage
+    depends_on:
+      identity-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # ==================== Frontend ====================
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_GATEWAY: ${VITE_API_GATEWAY:-https://localhost}
+        VITE_ENABLE_CLIENT_PROCESSING: ${VITE_ENABLE_CLIENT_PROCESSING:-true}
+    image: eyeo/frontend:latest
+    container_name: eyeo-frontend
+    networks:
+      - secure_mesh_net
+    environment:
+      NODE_ENV: production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ==================== API Gateway ====================
+
+  api-gateway:
+    image: nginx:alpine
+    container_name: eyeo-api-gateway
+    networks:
+      - secure_mesh_net
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ops/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ops/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - identity-service
+      - stream-processing
+      - data-core
+      - frontend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+# ==================== Health Check Summary ====================
+# Run: docker-compose -f docker-compose.master.yml ps
+# All services should show (healthy) status
+# 
+# Service URLs (via API Gateway):
+# - Frontend:        http://localhost/
+# - Identity API:    http://localhost/api/auth/*
+# - Stream API:      http://localhost/api/events/*
+# - Data Core API:   http://localhost/api/stream/*
+# - Health Check:    http://localhost/health

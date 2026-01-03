@@ -1,0 +1,145 @@
+name: TeraAPI Build & Test
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [ '17', '21' ]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up JDK ${{ matrix.java-version }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build Identity Service
+      run: |
+        cd src/identity-service
+        mvn clean verify -DskipTests=false
+
+    - name: Build Stream Processing Service
+      run: |
+        cd src/stream-processing-service
+        mvn clean verify -DskipTests=false
+
+    - name: Run Tests - Identity Service
+      run: |
+        cd src/identity-service
+        mvn test
+
+    - name: Run Tests - Stream Processing Service
+      run: |
+        cd src/stream-processing-service
+        mvn test
+
+    - name: Generate Test Reports
+      if: always()
+      run: |
+        mkdir -p test-reports
+        find . -name "surefire-reports" -type d -exec cp -r {} test-reports \;
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-java-${{ matrix.java-version }}
+        path: test-reports/
+
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker images
+      run: |
+        docker-compose -f docker/docker-compose.yml build --no-cache
+
+    - name: Verify Docker builds
+      run: |
+        docker-compose -f docker/docker-compose.yml config
+
+  code-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Check Code Style - Identity Service
+      continue-on-error: true
+      run: |
+        cd src/identity-service
+        mvn checkstyle:check
+
+    - name: SonarQube Scan (if configured)
+      continue-on-error: true
+      run: |
+        cd src/identity-service
+        mvn clean verify sonar:sonar -Dsonar.projectKey=teraapi || true
+
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Check Dependencies - Identity Service
+      run: |
+        cd src/identity-service
+        mvn dependency-check:check || true
+
+    - name: Check Dependencies - Stream Service
+      run: |
+        cd src/stream-processing-service
+        mvn dependency-check:check || true
+
+  documentation:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Validate Documentation
+      run: |
+        echo "Checking documentation completeness..."
+        test -f docs/README.md || (echo "README.md missing" && exit 1)
+        test -f LEARNING_PATH.md || (echo "LEARNING_PATH.md missing" && exit 1)
+
+    - name: Generate API Documentation (optional)
+      continue-on-error: true
+      run: |
+        echo "API documentation generation step"
+        echo "Would generate Javadoc and API specs here"

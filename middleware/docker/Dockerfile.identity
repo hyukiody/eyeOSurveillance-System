@@ -1,0 +1,13 @@
+FROM eclipse-temurin:17-jdk-jammy
+
+WORKDIR /app
+
+# Copy identity service JAR
+COPY src/identity-service/target/identity-service-1.0.0.jar app.jar
+
+ENV JWT_SECRET=mySecretKeyForJWTTokenGenerationAndValidationPurposesOnly123456789!@#$%^&* \
+    JWT_EXPIRATION=86400000
+
+EXPOSE 8081
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

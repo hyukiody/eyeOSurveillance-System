@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0",
+  "eventId": "demo-001",
+  "eventType": "PERSON_DETECTED",
+  "timestamp": "2026-01-02T12:00:00Z",
+  "cameraId": "demo-camera-001",
+  "sessionId": "demo-session-001",
+  "detections": [
+    {
+      "objectClass": "person",
+      "confidence": 0.96,
+      "boundingBox": {
+        "x": 120,
+        "y": 80,
+        "width": 200,
+        "height": 450
+      }
+    }
+  ],
+  "metadata": {
+    "location": "Demo Entrance",
+    "fps": 25,
+    "resolution": "1920x1080"
+  }
+}

@@ -1,0 +1,4 @@
+com\imageprocessing\ImageFilterIntegrationTest.class
+backend\entities\ImageInverterTest.class
+backend\services\ImageServiceTest.class
+com\imageapp\service\ImageFiltersServiceTest.class

@@ -1,0 +1,254 @@
+# ========================================
+# EyeO Platform - Secure Mesh Network
+# Zero-Trust Video Surveillance System
+# ========================================
+
+networks:
+  secure_mesh_net:
+    driver: bridge
+    internal: false  # Permite comunicação externa via Gateway
+
+volumes:
+  sentinel-db-data:
+  encrypted-video-storage:
+  identity-db-data:
+  stream-db-data:
+
+services:
+  # ============================================================
+  # 1. Data Core (Secure I/O Engine) - Video Processing
+  # Port: 9090 | Video processing and blind storage
+  # ============================================================
+  secure-io-engine:
+    build:
+      context: ./data-core
+      dockerfile: Dockerfile
+    container_name: eyeo-data-core
+    environment:
+      - SERVER_PORT=9090
+      - SPRING_PROFILES_ACTIVE=production
+      - EYEO_STORAGE_PATH=/storage/processed
+      - EYEO_MASTER_KEY=${EYEO_MASTER_KEY:-}
+    volumes:
+      - encrypted-video-storage:/storage/processed
+    networks:
+      - secure_mesh_net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/api/v1/video/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ============================================================
+  # 2. Edge Node - Video Capture and Streaming
+  # Port: 8080
+  # ============================================================
+  eyeo-edge-node:
+    build:
+      context: ./edge-node
+      dockerfile: Dockerfile
+    container_name: eyeo-edge-node
+    environment:
+      - SERVER_PORT=8080
+      - EYEO_DATA_CORE_URL=http://secure-io-engine:9090
+      - EYEO_DEVICE_ID=${DEVICE_ID:-edge-node-001}
+      - EYEO_DEVICE_TOKEN=${DEVICE_TOKEN:-dev_token}
+    networks:
+      - secure_mesh_net
+    depends_on:
+      - secure-io-engine
+    restart: unless-stopped
+
+  # ============================================================
+  # 3. MIDDLEWARE (Image Inverter) - Gatekeeper de Eventos
+  # Porta Interna: 8091
+  # ============================================================
+  image-inverter:
+    build:
+      context: ../Image-Inverter_Project
+      dockerfile: Dockerfile
+    container_name: eyeo-middleware
+    environment:
+      - SERVER_PORT=8091
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://sentinel-db:5432/sentinel
+      - SPRING_DATASOURCE_USERNAME=sentinel_user
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-change_this_password}
+      - MICROKERNEL_URL=http://secure-io-engine:8080
+    networks:
+      - secure_mesh_net
+    depends_on:
+      sentinel-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8091/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ============================================================
+  # 4. SENTINEL DATABASE (PostgreSQL) - Armazenamento Cego
+  # Porta Interna: 5432 (sem exposição externa)
+  # ============================================================
+  sentinel-db:
+    image: postgres:16-alpine
+    container_name: eyeo-sentinel-db
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-sentinel}
+      - POSTGRES_USER=${POSTGRES_USER:-sentinel_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD not set in .env}
+    volumes:
+      - sentinel-db-data:/var/lib/postgresql/data
+      - ./ops/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./ops/pg_hba.conf:/etc/postgresql/pg_hba.conf
+    networks:
+      - secure_mesh_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel_user -d sentinel"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    command: postgres -c hba_file=/etc/postgresql/pg_hba.conf
+
+  # ============================================================
+  # 5. API GATEWAY (Nginx) - Reverse Proxy SSL/TLS
+  # Porta Externa: 80/443 | Ponto Único de Entrada
+  # ============================================================
+  api-gateway:
+    image: nginx:alpine
+    container_name: eyeo-gateway
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ops/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ops/ssl:/etc/nginx/ssl:ro
+    networks:
+      - secure_mesh_net
+    depends_on:
+      - secure-io-engine
+      - image-inverter
+      - frontend
+    restart: unless-stopped
+
+  # ============================================================
+  # 6. FRONTEND (React/Vite) - Painel de Controle
+  # Porta Interna: 5173
+  # ============================================================
+  frontend:
+    build:
+      context: ../javascriptProjects/jsproject
+      dockerfile: Dockerfile
+    container_name: eyeo-frontend
+    environment:
+      - VITE_API_GATEWAY=http://api-gateway
+      - VITE_ENABLE_CRYPTO=true
+    networks:
+      - secure_mesh_net
+    restart: unless-stopped
+
+  # ============================================================
+  # 7. IDENTITY SERVICE - JWT Authentication & Authorization
+  # Porta Interna: 8081
+  # ============================================================
+  identity-service:
+    build:
+      context: ./identity-service
+      dockerfile: Dockerfile
+    container_name: eyeo-identity-service
+    environment:
+      - SERVER_PORT=8081
+      - SPRING_DATASOURCE_URL=jdbc:mysql://identity-db:3306/teraapi_identity?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=identity_user
+      - SPRING_DATASOURCE_PASSWORD=${IDENTITY_DB_PASSWORD:-change_me}
+      - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-change-this-in-production}
+      - JWT_EXPIRATION=3600000
+    networks:
+      - secure_mesh_net
+    ports:
+      - "8081:8081"
+    depends_on:
+      identity-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  identity-db:
+    image: mysql:8.0
+    container_name: eyeo-identity-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=${IDENTITY_MYSQL_ROOT_PASSWORD:-change_me_root}
+      - MYSQL_DATABASE=teraapi_identity
+      - MYSQL_USER=identity_user
+      - MYSQL_PASSWORD=${IDENTITY_DB_PASSWORD:-change_me}
+    volumes:
+      - identity-db-data:/var/lib/mysql
+      - ./ops/scripts/init-identity-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - secure_mesh_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ============================================================
+  # 8. STREAM PROCESSING SERVICE - Real-time Event Detection
+  # Porta Interna: 8082
+  # ============================================================
+  stream-processing:
+    build:
+      context: ./stream-processing
+      dockerfile: Dockerfile
+    container_name: eyeo-stream-processing
+    environment:
+      - SERVER_PORT=8082
+      - SPRING_DATASOURCE_URL=jdbc:mysql://stream-db:3306/teraapi_stream?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=stream_user
+      - SPRING_DATASOURCE_PASSWORD=${STREAM_DB_PASSWORD:-change_me}
+      - IDENTITY_SERVICE_URL=http://identity-service:8081
+      - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-change-this-in-production}
+    networks:
+      - secure_mesh_net
+    ports:
+      - "8082:8082"
+    depends_on:
+      stream-db:
+        condition: service_healthy
+      identity-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  stream-db:
+    image: mysql:8.0
+    container_name: eyeo-stream-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=${STREAM_MYSQL_ROOT_PASSWORD:-change_me_root}
+      - MYSQL_DATABASE=teraapi_stream
+      - MYSQL_USER=stream_user
+      - MYSQL_PASSWORD=${STREAM_DB_PASSWORD:-change_me}
+    ports:
+      - "3307:3306"
+    volumes:
+      - stream-db-data:/var/lib/mysql
+      - ./ops/scripts/init-stream-db.sql:/docker-entrypoint-initdb.d/stream-init.sql
+    networks:
+      - secure_mesh_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped

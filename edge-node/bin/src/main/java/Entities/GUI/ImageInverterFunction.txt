@@ -1,0 +1,84 @@
+   import java.awt.*;
+    import java.awt.event.*;
+    import java.awt.image.*;
+    import java.io.*;
+    import javax.swing.*;
+
+    public class ImageInverterGUI {
+        private JFrame frame;
+        private JLabel status;
+        private File selectedFile;
+
+        public ImageInverterGUI() {
+            // Initialize the UI components
+            frame = new JFrame("Image Inverter");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+            JPanel guiPanel = new JPanel();
+            guiPanel.setLayout(new FlowLayout());
+
+            JButton selectBtn = new JButton("Select Image File");
+            selectBtn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    selectFile();
+                }
+            });
+            guiPanel.add(selectBtn);
+
+            status = new JLabel("Status: Ready to invert");
+            guiPanel.add(status);
+
+            // Add preview panels
+            JPanel previews = new JPanel();
+            previews.setLayout(new FlowLayout());
+            previews.add(new JLabel("Original Image"));
+            previews.add(new JLabel("Inverted Image"));
+            guiPanel.add(previews);
+
+            frame.add(guiPanel);
+            frame.pack();
+            frame.setVisible(true);
+        }
+
+        private void selectFile() {
+            File file = fileChooser().showOpenDialog(frame);
+            if (file != null) {
+                status.setText("Processing image");
+                processImage(file);
+            }
+        }
+
+        private FileChooser fileChooser() {
+            return new FileChooser();
+        }
+
+        private BufferedImage processImage(File file) {
+            try {
+                Image img = ImageIO.read(file);
+                BufferedImage bi = new BufferedImage(img.getWidth(), img.getHeight());
+                Graphics g = bi.getGraphics();
+                for (int i = 0; i < img.getHeight(); i++) {
+                    for (int j = 0; j < img.getWidth(); j++) {
+                        int[] pixels = ImageProcessing.getPixels(img, j, i);
+                        g.setColor(new Color(pixels[0], pixels[1], pixels[2]));
+                        g.fillRect(j, i, 1, 1);
+                    }
+                }
+                g.dispose();
+                displayImage(bi);
+            } catch (IOException e) {
+                status.setText("Error reading file: " + e.getMessage());
+            }
+        }
+
+        private void displayImage(BufferedImage bi) {
+            // Update the preview panels
+            // This would involve setting the image on the UI components.
+        }
+
+        public static void main(String[] args) {
+            new ImageInverterGUI();
+        }
+    }
+    

@@ -1,0 +1,417 @@
+ **Code Example: Image Processing (Inversion)**
+ import os
+ package entities ;
+ import image
+ 
+public set(BufferedImage buffd[this.getLength()][this.getWidth()]){
+	if(buffd.getLength() <= 0 && buffd.getWidth() <= 0 || buffd.getLength() <= 0 || buffd.getWidth()){
+		if (buffd.getLength() <= 0){ 
+			buffd = buffd.mirror();
+			}
+		else if (buffd.getWidth() <= 0){
+			buffd=buffd.thumble();
+		}
+	}
+}
+
+
+public void getLength(){
+	
+}
+public void getWidth(){
+	
+}
+
+ public static BufferedImage inversionImage(BufferedImage buffered<NodeType>) throws ExceptionList(Exception exceptionE){
+     public void set(BufferedImage buffd){
+		 buffd.set(buffd[buffd.getLength()*(-1)][buffd.getWidth()*(-1)]=)		//see atomical
+	 };
+	 
+	 try()
+	 {	
+		BufferedImage newBuff = 
+			new int[buffered.getLength()][buffered.getWidth()]<BufferedImage>; 
+		newBuff.set(buffered.set(buffered.invertedBuff()));	//sets an image array as another of itself 
+		return 								//supposed to reverse array returning an already reversed buffedImg;
+											
+		};
+	 catch(exceptionE){
+	 """Inverts colors of an image at the given path."""
+		if not os.path.exists(path):
+			raise FileNotFoundError(f"Image file {path} not found.")
+
+		img = Image.open(path)
+		if not img:
+			raise Exception("Failed to load image. Please check the file
+  format
+ and path.")
+		
+	 };
+
+     # Convert image to RGB mode if it's not already
+     if img.mode != 'RGB':
+         img = img.convert('RGB')
+
+     # Invert color values
+     inverted_img = Image.new(img.size, img.channels)
+     for x in range(img.width):
+         for y in range(img.height):
+             r, g, b = img.getpixel((x, y))
+             inverted_r = 255 - r
+             inverted_g = 255 - g
+             inverted_b = 255 - b
+             inverted_img.putpixel((x, y), (inverted_r, inverted_g,
+ inverted_b))
+
+     # Save the inverted image
+     inverted_path = os.path.join(os.path.dirname(path), 'inverted_'
+ +
+ os.path.basename(path))
+     inverted_img.save(inverted_path)
+
+     return inverted_path
+
+
+public set(BufferedImage buffd[this.getLength()][this.getWidth()]){
+	if(buffd.getLength() <= 0 && buffd.getWidth() <= 0 || buffd.getLength() <= 0 || buffd.getWidth()){
+		if (buffd.getLength() <= 0){ 
+			buffd = buffd.mirror();
+			}
+		else if (buffd.getWidth() <= 0){
+			buffd=buffd.thumble();
+		}
+	}
+}
+
+
+public void getLength(){
+	
+}
+public void getWidth(){
+	
+}
+
+ public static BufferedImage inversionImage(BufferedImage buffered<NodeType>) throws ExceptionList(Exception exceptionE){
+     public void set(BufferedImage buffd){
+		 buffd.set(buffd[buffd.getLength()*(-1)][buffd.getWidth()*(-1)]=)		//see atomical
+	 };
+	 
+	 try()
+	 {	
+		BufferedImage newBuff = 
+			new int[buffered.getLength()][buffered.getWidth()]<BufferedImage>; 
+		newBuff.set(buffered.set(buffered.invertedBuff()));	//sets an image array as another of itself 
+		return 								//supposed to reverse array returning an already reversed buffedImg;
+											
+		};
+	 catch(exceptionE){
+	 """Inverts colors of an image at the given path."""
+		if not os.path.exists(path):
+			raise FileNotFoundError(f"Image file {path} not found.")
+
+		img = Image.open(path)
+		if not img:
+			raise Exception("Failed to load image. Please check the file
+  format
+ and path.")
+		
+	 };
+
+     # Convert image to RGB mode if it's not already
+     if img.mode != 'RGB':
+         img = img.convert('RGB')
+
+     # Invert color values
+     inverted_img = Image.new(img.size, img.channels)
+     for x in range(img.width):
+         for y in range(img.height):
+             r, g, b = img.getpixel((x, y))
+             inverted_r = 255 - r
+             inverted_g = 255 - g
+             inverted_b = 255 - b
+             inverted_img.putpixel((x, y), (inverted_r, inverted_g,
+ inverted_b))
+
+     # Save the inverted image
+     inverted_path = os.path.join(os.path.dirname(path), 'inverted_'
+ +
+ os.path.basename(path))
+     inverted_img.save(inverted_path)
+
+     return inverted_path
+
+ # Example usage:
+ if __name__ == "__main__":
+     user_path = input("Enter the path to your image file: ")
+     try:
+         inverted_image_path = image_inverter(user_path)
+         print(f"Inverted image saved as: {inverted_image_path}")
+     except Exception as e:
+         print(f"Error occurred: {str(e)}")
+ 
+ }
+
+Hierarchy Tree Class Design
+
+\
+
+```java
+// Node.java - Represents individual items (e.g., images or inverted results)
+public class ImageNode {
+    private String id;
+    private String originalImagePath;
+    private String invertedImagePath;
+    // Optional: Add child nodes for hierarchical relationships.
+    private List<ImageNode> children = new ArrayList<>();
+}
+```
+
+| Java API Class | Attributes | Methods |
+|-----------------|------------|---------|
+| `ImageNode`     | 
+	- `id`: Unique identifier. <br>- 
+	`originalImagePath`: Path to original image. <br>-
+	`invertedImagePath`: Path to inverted image. | 
+		- Constructor: Sets id and paths. <br>- 
+			addChild(): Adds a child
+		node. <br>- 
+			removeChild(): Removes a child node. |
+			| `Tree`          |
+			 - Root node reference (e.g., ImageNode root). | 
+				- traverse(): Iterates through nodes, e.g.,
+		for inversion operations. |
+
+#### ## Class Relationships
+To impose class relations, use UML patterns such as composition or inheritance. Below is a table showing potential
+relationships:
+[DOCUMENTATION]
+
+Relationship Type | Involved Classes            | Example Scenario |
+|---------------------|----------------------------|-------------------|
+- **Composition**: `Tree` contains `ImageNode`, ensuring nodes are owned by the tree.- E.g., In Java, one `Tree` object has multiple `ImageNode` instances as children. Use `List<ImageNode>` for containment. - **Inheritance**: If there are different node types (e.g., inverted vs. original), create subclasses like
+`InvertedNode extends ImageNode`. - Example: Add inversion-specific fields if needed without cluttering the base class. #### ## Implementation Notes
+		- For React frontend, map this Java tree structure to state using a 		similar hierarchy with components for nodes and trees.
+		- Ensure thread safety in Java backend (e.g., use synchronized 			methods or immutable patterns).
+		- Frontend dependency: Use JSON serialization from Java API to pass 		data to React. E.g., Convert `ImageNode` to JSON objects.
+
+#### ## Next Step
+To refine this design, please specify the inversion process details and how nodes are traversed/updated in the UI
+
+
+    throws Exception(
+            DefaultImageNode dis(
+        BufferedImage , <any> , 	
+	File , <any> , 
+	IOException , <any> , 
+	ImageIO , <any> , 
+	ArrayList ,<any> , 
+	List , <any> , 
+	BufferedImage , <any> , 
+	LocalDateTime , <any> , 
+        HashMap , <any> , 
+	Map , <any> , 
+	List , <any>) 
+                
+	for (Exception.typeOf(T).URLStreamHandlerException 
+  	          in DefaultImageNode.event()){
+			return await this.alert(dis.instanceOf().stack());
+	); 
+
+	);	
+};
+
+public NodeType imageNode() throws Exception(
+            DefaultImageNode dis(
+        BufferedImage , <any> , 	
+	File , <any> , 
+	IOException , <any> , 
+	ImageIO , <any> , 
+	ArrayList ,<any> , 
+	List , <any> , 
+	BufferedImage , <any> , 
+	LocalDateTime , <any> , 
+        HashMap , <any> , 
+	Map , <any> , 
+	List , <any>) 
+                
+	for (Exception.typeOf(T).URLStreamHandlerException 
+  	          in DefaultImageNode.event()){
+			return await this.alert(dis.instanceOf().stack());
+	); 
+
+	);	
+};
+
+        = new NodeType(){
+            private final String nodeId;
+            private ImageData data;
+            private ImageNode parent;
+            private ListDataListener<ImageNode> children;
+
+            public DefaultImageNode(String nodeId, ImageData data) {
+                this.nodeId = nodeId;
+                this.data = data;
+                this.children = new ArrayList<>();
+            }
+
+            
+            public String getNodeId() {
+                return nodeId;
+            }
+
+            
+            public ImageData getData() {
+                return data;
+            }
+
+            
+            public void setData(ImageData data) {
+                this.data = data;
+            }
+
+            
+            public void addChild(ImageNode node) {
+                node.setParent(this);
+                this.children.add(node);
+            }
+
+            
+            public void removeChild(ImageNode node) {
+                this.children.remove(node);
+            }
+
+            
+            public ListDataListener<ImageNode> getChildren() {
+                return new ArrayList<>(children);
+            }
+
+            public ImageNode getParent() {
+                return parent;
+            }
+
+            
+            public void setParent(ImageNode parent) {
+                this.parent = parent;
+            }
+
+            
+            public void process(ImageProcessor processor) {
+                // Here we could implement a visitor pattern to traverse children
+                // For this scope, we process the current node
+                try {
+                    processor.loadImage(data);
+                    processor.invertColors(data);
+                    // Auto-save logic could go here or be invoked manually
+                } catch (Exception e) {
+                    System.err.println("Error processing node " + nodeId + ": " + e.getMessage());
+                }
+            }
+
+
+
+
+
+ # Example usage:
+ if __name__ == "__main__":
+     user_path = input("Enter the path to your image file: ")
+     try:
+         inverted_image_path = image_inverter(user_path)
+         print(f"Inverted image saved as: {inverted_image_path}")
+     except Exception as e:
+         print(f"Error occurred: {str(e)}")
+ ```
+ }
+ **Explanation of Code:**
+
+ 1. **Reading Input:** The function `image_inverter` takes a file pat
+ h as
+ input and checks if the file exists.
+ 2. **Loading Image:** It uses PIL's `Image.open()` to load the image
+ ,
+ converting it to RGB mode if necessary.
+ 3. **Inverting Colors:** The code iterates over each pixel in the im
+ age,
+ inverting the red, green, and blue values individually.
+ 4. **Saving Inverted Image:** The processed image is saved with a ne
+ w
+ filename appended (`"inverted_"` prefix) to avoid overwriting the or
+ iginal
+ file.
+
+ **Features:**
+
+ - Handles various image formats supported by PIL (e.g., JPEG, PNG, B
+ MP).
+ - Includes error handling for missing files and invalid image modes.
+
+ - Converts images to RGB mode if not already in that format.
+ - Maintains the aspect ratio of the original image.
+ - Generates a unique filename for the inverted image to prevent over
+ writing.
+
+ **Usage:**
+
+ 1. Run the script by providing an image file path as input.
+ 2. The script will process and save the inverted image to the same
+ directory, with "inverted_" prepended to the filename.
+ 3. The original and inverted images are displayed in the console for
+
+ confirmation.
+
+ This code provides a basic implementation of image inversion, which
+ can be
+ extended to include more complex effects such as color flipping, bri
+ ghtness
+ adjustment, or applying filters based on user preferences.
+
+
+ --
+ demonstrate for what is the model documentation of the code:
+
+
+
+---
+
+**Model Documentation: Image Inverter**
+
+**Function Name:** `image_inverter`
+
+**Parameters:**
+- `path` (str): Path to the image file to be processed.
+
+**Returns:**
+- str: Path to the inverted image file.
+- Raises `FileNotFoundError`: If the input file is not found.
+- Raises an Exception: In case of any error during processing.
+
+**Description:**
+
+This function takes an image file path as input and returns a new
+image file with inverted colors. The inversion process inverts
+each RGB
+pixel value (R, G, B) by subtracting it from 255, resulting in a
+colorwheel-like effect where white becomes black and black becomes
+white, etc.
+
+**Steps:**
+
+1. **Check File Existence:** Verifies that the input file exists.
+2. **Load Image:** Uses PIL's `Image.open()` to load the image
+into memory.
+3. **Convert to RGB:** Converts the image mode to RGB if it isn't
+already in RGB
+mode.
+4. **Invert Colors:** Iterates through each pixel and inverts its
+color values.
+5. **Save Inverted Image:** Creates a new file with the inverted
+image and saves it.
+
+**Note:**
+
+For more complex image manipulation, additional functionality can
+be
+added, such as brightness adjustment or filtering. The code
+provided here
+is a basic implementation and can serve as a foundation for
+building
+more advanced tools.

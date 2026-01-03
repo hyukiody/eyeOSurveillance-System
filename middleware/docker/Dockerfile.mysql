@@ -1,0 +1,10 @@
+FROM mysql:8.0
+
+ENV MYSQL_ROOT_PASSWORD=root \
+    MYSQL_DATABASE=teraapi_identity \
+    MYSQL_USER=teraapi \
+    MYSQL_PASSWORD=teraapi_password
+
+COPY init-db.sql /docker-entrypoint-initdb.d/
+
+EXPOSE 3306

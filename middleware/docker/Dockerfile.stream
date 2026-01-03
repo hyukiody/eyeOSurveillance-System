@@ -1,0 +1,12 @@
+FROM eclipse-temurin:17-jdk-jammy
+
+WORKDIR /app
+
+# Copy stream processing service JAR
+COPY src/stream-processing-service/target/stream-processing-service-1.0.0.jar app.jar
+
+ENV JWT_SECRET=mySecretKeyForJWTTokenGenerationAndValidationPurposesOnly123456789!@#$%^&*
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
