@@ -4,9 +4,9 @@ spring:
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://${IDENTITY_DB_HOST:localhost}:${IDENTITY_DB_PORT:3306}/${IDENTITY_DB_NAME:teraapi_identity}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
-    username: ${SPRING_DATASOURCE_USERNAME:root}
-    # Do not commit real passwords; set SPRING_DATASOURCE_PASSWORD via environment/.env
-    password: ${SPRING_DATASOURCE_PASSWORD:change_me}
+    username: ${SPRING_DATASOURCE_USERNAME:identity_user}
+    # REQUIRED: Set SPRING_DATASOURCE_PASSWORD via environment/.env (no default for security)
+    password: ${SPRING_DATASOURCE_PASSWORD:?Database password must be set via environment variable}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 10
@@ -40,9 +40,13 @@ server:
 
 app:
   jwt:
-    # Do not commit real secrets; set JWT_SECRET via environment/.env
-    secret: ${JWT_SECRET:change_me}
-    expiration: ${JWT_EXPIRATION:86400000}
+    # REQUIRED: Set JWT_SECRET via environment/.env (minimum 256 bits)
+    secret: ${JWT_SECRET:?JWT_SECRET environment variable is required}
+    expiration: ${JWT_EXPIRATION:3600000}
+
+cors:
+  allowed:
+    origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
 
 logging:
   level:

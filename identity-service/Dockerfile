@@ -4,19 +4,21 @@ FROM eclipse-temurin:21-jdk-alpine AS build
 
 WORKDIR /app
 
-# Copy dependency files first for better layer caching
+# Copy parent pom and identity-service pom
 COPY pom.xml ./
+COPY identity-service/pom.xml ./identity-service/
 RUN apk add --no-cache maven
 
 # Download dependencies (cached layer)
-RUN mvn dependency:go-offline -B
+RUN cd identity-service && mvn dependency:go-offline -B
 
 # Copy source code
-COPY src ./src
+COPY identity-service/src ./identity-service/src
 
 # Build the application
-RUN mvn clean package -DskipTests && \
-    mv target/*.jar app.jar
+RUN cd identity-service && \
+    mvn clean package -DskipTests && \
+    mv target/*.jar /app/app.jar
 
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine

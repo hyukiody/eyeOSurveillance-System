@@ -76,6 +76,35 @@ eyeo-platform/
 - [Security](SECURITY.md) - Security policies and best practices
 - [Deployment](DEPLOYMENT.md) - Production deployment guide
 - [Contributing](CONTRIBUTING.md) - Development workflow
+- **[First Development Checkpoint](FIRST_DEV_CHECKPOINT.md)** - Containerized testing environment
+
+---
+
+## 🎯 Development Checkpoints
+
+### Checkpoint 1: Containerized Testing Environment (IN PROGRESS)
+Complete containerized development environment for testing and distribution.
+
+**Status**: 🚧 IN PROGRESS
+
+**Completed**:
+- ✅ Service structure identified (4 microservices + 2 databases)
+- ✅ All Dockerfiles created and fixed for multi-module Maven
+- ✅ docker-compose.dev.yml orchestration created
+- ✅ Development environment configuration (.env.dev)
+- ✅ Automation scripts (start-dev.ps1, stop-dev.ps1, test-dev.ps1)
+- ✅ Complete documentation (DEV_CHECKPOINT.md)
+
+**In Progress**:
+- 🔄 Building container images
+
+**Next Steps**:
+- Complete Docker builds
+- Test full deployment with `./start-dev.ps1`
+- Validate with `./test-dev.ps1`
+- Export containers for distribution
+
+📖 **See [FIRST_DEV_CHECKPOINT.md](FIRST_DEV_CHECKPOINT.md) for complete details**
 
 ---
 
